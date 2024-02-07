@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const AvailabilityForm = () => {
+const AvailabilityForm = ({ isOpen, onClose }) => {
   const [username, setUsername] = useState('');
   const [userInfo, setUserInfo] = useState({
     phone: '',
@@ -52,111 +52,92 @@ const AvailabilityForm = () => {
     // Implement submission logic here
   };
 
- return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {step === 1 ? (
-        <>
-          {isLoading ? (
-            <p>Loading...</p>
+  return (
+    <div className={`modal modal-open`}>
+      <div className="modal-box relative">
+        <button onClick={onClose} className="btn btn-sm btn-circle absolute right-2 top-2">✕</button>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {step === 1 ? (
+            <>
+              {isLoading ? (
+                <p className="text-center">Loading...</p>
+              ) : (
+                <>
+                  <div className="form-control">
+                    <label htmlFor="username" className="label">
+                      <span className="label-text">Username:</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="input input-bordered input-primary w-full max-w-xs"
+                      required
+                    />
+                  </div>
+                  <div className="modal-action">
+                    <button type="button" onClick={handleUsernameSubmit} className="btn w-full btn-primary">Login</button>
+                  </div>
+                </>
+              )}
+            </>
           ) : (
             <>
-              <label htmlFor="username">Username:</label>
-              <input
-                type="text"
-                name="username"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-              <button type="button" onClick={handleUsernameSubmit} className="btn">Fetch User Info</button>
+             
+              <div className="form-control">
+                <label htmlFor="name" className="label">
+                  <span className="label-text">Name:</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  value={userInfo.name}
+                  onChange={handleChange}
+                  className="input input-bordered w-full max-w-xs"
+                  required
+                />
+              </div>
+              <div className="form-control">
+                <label htmlFor="phone" className="label">
+                  <span className="label-text">Phone:</span>
+                </label>
+                <input
+                  type="text"
+                  name="phone"
+                  id="phone"
+                  value={userInfo.phone}
+                  onChange={handleChange}
+                  className="input input-bordered w-full max-w-xs"
+                  required
+                />
+              </div>
+              {/* ... repeat for each input field */}
+              <div className="form-control">
+                <label className="label cursor-pointer">
+                  <span className="label-text mr-2">Are you available?</span>
+                  <input
+                    type="checkbox"
+                    name="availability"
+                    checked={userInfo.availability}
+                    onChange={handleChange}
+                    className="toggle toggle-primary"
+                  />
+                </label>
+              </div>
+              <div className="modal-action">
+                <button type="submit" className="btn w-full btn-primary">Submit Availability</button>
+              </div>
             </>
           )}
-        </>
-      ) : (
-        <>
-          <label htmlFor="name">Name:</label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            value={userInfo.name}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="phone">Phone Number:</label>
-          <input
-            type="text"
-            name="phone"
-            id="phone"
-            value={userInfo.phone}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            name="email"
-            id="email"
-            value={userInfo.email}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="instagram">Instagram:</label>
-          <input
-            type="text"
-            name="instagram"
-            id="instagram"
-            value={userInfo.instagram}
-            onChange={handleChange}
-          />
-          <label htmlFor="size">Size:</label>
-          <input
-            type="text"
-            name="size"
-            id="size"
-            value={userInfo.size}
-            onChange={handleChange}
-          />
-          <label htmlFor="shoeSize">Shoe Size:</label>
-          <input
-            type="text"
-            name="shoeSize"
-            id="shoeSize"
-            value={userInfo.shoeSize}
-            onChange={handleChange}
-          />
-          <label htmlFor="college">College:</label>
-          <input
-            type="text"
-            name="college"
-            id="college"
-            value={userInfo.college}
-            onChange={handleChange}
-          />
-          <label htmlFor="salesExp">Sales Experience:</label>
-          <input
-            type="text"
-            name="salesExp"
-            id="salesExp"
-            value={userInfo.salesExp}
-            onChange={handleChange}
-          />
-          <label>
-            <input
-              type="checkbox"
-              name="availability"
-              checked={userInfo.availability}
-              onChange={handleChange}
-            />
-            Are you available?
-          </label>
-          <button type="submit" className="btn">Submit Availability</button>
-        </>
-      )}
-      {error && <p className="text-red-500">{error}</p>}
-    </form>
+          {error && <p className="text-red-500">{error}</p>}
+        </form>
+      </div>
+    </div>
   );
+  
 };
 
 export default AvailabilityForm;
