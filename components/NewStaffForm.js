@@ -33,48 +33,50 @@ export default function NewStaffForm({ isOpen, onClose }) {
     setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Log the form data to the console (for debugging purposes)
     console.log('Form data submitted:', formData);
-  
+
     try {
-      // Send the form data to the /api/submit endpoint using the Fetch API
-      const response = await fetch('/api/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-  
-      // Check if the request was successful
-      if (response.ok) {
-        // Handle success - for example, you can clear the form or display a success message
-        alert('Form submitted successfully!');
-        // Reset the form data state if needed
-        setFormData({
-          name: '',
-          phone: '',
-          email: '',
-          instagram: '',
-          size: '',
-          shoeSize: '',
-          college: '',
-          salesExp: '',
+        // Send the form data to the /api/submit endpoint using the Fetch API
+        const response = await fetch('/api/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
         });
-      } else {
-        // Handle errors if the server response was not ok
-        const error = await response.json();
-        throw new Error(error.message || 'Something went wrong');
-      }
+
+        // Check if the request was successful
+        if (response.ok) {
+            // Handle success - for example, you can clear the form or display a success message
+            alert('Form submitted successfully!');
+            // Reset the form data state if needed
+            setFormData({
+                name: '',
+                phone: '',
+                email: '',
+                instagram: '',
+                size: '',
+                shoeSize: '',
+                college: '',
+                salesExp: '',
+            });
+            // Close the form
+            onClose();
+        } else {
+            // Handle errors if the server response was not ok
+            const error = await response.json();
+            throw new Error(error.message || 'Something went wrong');
+        }
     } catch (error) {
-      // Log or display the error if the request failed
-      console.error('Failed to submit form:', error);
-      alert(`Failed to submit form: ${error.message}`);
+        // Log or display the error if the request failed
+        console.error('Failed to submit form:', error);
+        alert(`Failed to submit form: ${error.message}`);
     }
-  };
+};
   
   // Only render the modal content if isOpen is true
   if (!isOpen) return null;
