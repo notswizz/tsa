@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function NewStaffForm({ isOpen, onClose }) {
-  const [step, setStep] = useState(0); // Initial step for the information page
+  const [step, setStep] = useState(0); // Initialize step to 0 for the information page
+  const [username, setUsername] = useState('');
   const [formData, setFormData] = useState({
     username: '',
     name: '',
@@ -15,9 +16,21 @@ export default function NewStaffForm({ isOpen, onClose }) {
     availability: false,
   });
 
+  useEffect(() => {
+    if (username && step === 1) {
+      fetch(`/api/getUsername?username=${username}`)
+        .then(response => response.json())
+        .then(data => {
+          setFormData({ ...formData, ...data });
+          setStep(step + 1); // Proceed to the next step
+        })
+        .catch(error => console.error('Error fetching user details:', error));
+    }
+  }, [username, step]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prevFormData => ({ ...prevFormData, [name]: type === 'checkbox' ? checked : value }));
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
   const handleSubmit = async (e) => {
@@ -73,7 +86,7 @@ export default function NewStaffForm({ isOpen, onClose }) {
 
         {step === 0 && (
           <div className="space-y-4 p-4">
-            <h2 className="text-lg font-semibold">TSA Staff Application</h2>
+            <h2 className="text-lg font-semibold">Welcome to The Smith Agency staff application</h2>
             <p>Please provide a username for your TSA account and some additional info. If we feel there may be a fit, we will be in contact shortly!</p>
             <button className="btn btn-primary" onClick={() => setStep(1)}>Get Started</button>
           </div>
