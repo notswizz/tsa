@@ -87,10 +87,10 @@ return (
             <button className="btn btn-sm btn-circle absolute right-2 top-2" onClick={onClose}>✕</button>
 
             {step === 0 && (
-                <div className="space-y-4 p-4">
-                    <h2 className="text-lg font-semibold">Welcome to The Smith Agency staff application</h2>
-                    <p>Please provide a username for your TSA account and some additional info. If we feel there may be a fit, we will be in contact shortly!</p>
-                    <button className="btn btn-primary" onClick={() => setStep(1)}>Get Started</button>
+                <div className="space-y-4 p-4 bg-white shadow-md rounded-lg">
+                    <h2 className="text-2xl font-bold text-gray-800">TSA Staff Application</h2>
+                    <p className="text-gray-600">Please provide a username for your TSA account and some additional info. If we feel there may be a fit, we will be in contact shortly!</p>
+                    <button className="btn btn-primary btn-lg" onClick={() => setStep(1)}>Get Started</button>
                 </div>
             )}
 

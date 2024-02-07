@@ -44,13 +44,13 @@ module.exports = {
       "nord",
       "sunset",
       {
-        mytheme: {                          // Create a custom theme called "mytheme"
-          "primary": "#a991f7",             // Define colors
-          "secondary": "#f6d860",
-          "accent": "#37cdbe",
-          "neutral": "#3d4451",
-          "base-100": "#ffffff",
-          // You can add as many color and property customizations as you want
+        tsa: {                          
+          "primary": "#FF69B4",             // Hot Pink as primary color
+          "secondary": "#FFD700",           // Gold as secondary color
+          "accent": "#1E90FF",              // Dodger Blue as accent color
+          "neutral": "#808080",             // Gray as neutral color
+          "base": "#ffffff",            // White as base color
+          
         },
       },
     ],
