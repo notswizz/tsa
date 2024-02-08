@@ -1,3 +1,4 @@
+// pages/api/getUser.js
 import { connectToDatabase } from '../../utils/mongodb';
 
 export default async function handler(req, res) {
@@ -7,20 +8,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Username is required' });
     }
 
-    // Convert username to lowercase
-    username = username.toLowerCase();
-    console.log("Querying for username:", username); // Debugging log with lowercase username
+    username = username.toLowerCase(); // Convert username to lowercase for consistency
 
     try {
         const { db } = await connectToDatabase();
-        // Search for username in lowercase
         const user = await db.collection('staff').findOne({ username });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Exclude the _id field from the returned user info
+        // Assume more info is fetched and exclude the _id field from the result
         const { _id, ...userInfo } = user;
         res.status(200).json(userInfo);
     } catch (error) {

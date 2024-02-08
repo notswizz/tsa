@@ -1,118 +1,116 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export default function NewStaffForm({ isOpen, onClose }) {
-  const [step, setStep] = useState(0); // Initialize step to 0 for the information page
-  const [username, setUsername] = useState('');
-  const [formData, setFormData] = useState({
-    username: '',
-    name: '',
-    phone: '',
-    email: '',
-    instagram: '',
-    size: '',
-    shoeSize: '',
-    college: '',
-    salesExp: '',
-    availability: false,
-  });
+    const [step, setStep] = useState(0);
+    const [formData, setFormData] = useState({
+        username: '',
+        password: '', // Include password in the form data
+        name: '',
+        phone: '',
+        email: '',
+        instagram: '',
+        size: '',
+        shoeSize: '',
+        college: '',
+        salesExp: '',
+        availability: []
+    });
 
-  useEffect(() => {
-    if (username && step === 1) {
-      fetch(`/api/getUsername?username=${username}`)
-        .then(response => response.json())
-        .then(data => {
-          setFormData({ ...formData, ...data });
-          setStep(step + 1); // Proceed to the next step
-        })
-        .catch(error => console.error('Error fetching user details:', error));
-    }
-  }, [username, step]);
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+    };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
+        // Log the form data to the console (for debugging purposes)
+        console.log('Form data submitted:', formData);
 
-    // Log the form data to the console (for debugging purposes)
-    console.log('Form data submitted:', formData);
-
-    try {
-        // Send the form data to the /api/submit endpoint using the Fetch API
-        const response = await fetch('/api/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
-
-        // Check if the request was successful
-        if (response.ok) {
-            // Handle success - for example, you can clear the form or display a success message
-            alert('Form submitted successfully!');
-            // Reset the form data state if needed
-            setFormData({
-                name: '',
-                phone: '',
-                email: '',
-                instagram: '',
-                size: '',
-                shoeSize: '',
-                college: '',
-                salesExp: '',
+        try {
+            // Send the form data to the /api/addStaff endpoint using the Fetch API
+            const response = await fetch('/api/addStaff', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
             });
-            // Close the form
-            onClose();
-        } else {
-            // Handle errors if the server response was not ok
-            const error = await response.json();
-            throw new Error(error.message || 'Something went wrong');
+
+            if (response.ok) {
+                alert('Form submitted successfully!');
+                setFormData({
+                    username: '',
+                    password: '',
+                    name: '',
+                    phone: '',
+                    email: '',
+                    instagram: '',
+                    size: '',
+                    shoeSize: '',
+                    college: '',
+                    salesExp: '',
+                });
+                onClose(); // Close the form
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Something went wrong');
+            }
+        } catch (error) {
+            console.error('Failed to submit form:', error);
+            alert(`Failed to submit form: ${error.message}`);
         }
-    } catch (error) {
-        // Log or display the error if the request failed
-        console.error('Failed to submit form:', error);
-        alert(`Failed to submit form: ${error.message}`);
-    }
-};
-  
-  // Only render the modal content if isOpen is true
-  if (!isOpen) return null;
+    };
 
-return (
-    <div className={`modal ${isOpen ? "modal-open" : ""} p-4 overflow-auto`} style={{ maxHeight: '100vh' }}>
-        <div className="modal-box relative max-h-full overflow-auto">
-            <button className="btn btn-sm btn-circle absolute right-2 top-2" onClick={onClose}>✕</button>
+    // Only render the modal content if isOpen is true
+    if (!isOpen) return null;
 
-            {step === 0 && (
-                <div className="space-y-4 p-4 bg-white shadow-md rounded-lg">
-                    <h2 className="text-2xl font-bold text-gray-800">TSA Staff Application</h2>
-                    <p className="text-gray-600">Please provide a username for your TSA account and some additional info. If we feel there may be a fit, we will be in contact shortly!</p>
-                    <button className="btn btn-primary btn-lg" onClick={() => setStep(1)}>Get Started</button>
-                </div>
-            )}
+    return (
+        <div className={`modal ${isOpen ? "modal-open" : ""} p-4 overflow-auto`} style={{ maxHeight: '100vh' }}>
+            <div className="modal-box relative max-h-full overflow-auto">
+                <button className="btn btn-sm btn-circle absolute right-2 top-2" onClick={onClose}>✕</button>
 
-            {step === 1 && (
-                <form onSubmit={(e) => { e.preventDefault(); setUsername(formData.username); setStep(2); }} className="space-y-4">
-                    <div className="form-control">
-                        <label htmlFor="username" className="label">
-                            <span className="label-text">Username:</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="username"
-                            id="username"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                            className="input input-bordered"
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary w-full">Next</button>
-                </form>
-            )}
+{step === 0 && (
+    <div className="space-y-4 p-4 bg-white shadow-md rounded-lg text-center">
+        <h2 className="text-2xl font-bold text-gray-800">Welcome to the New Staff Form</h2>
+        <p className="text-gray-600">Please click "Begin" to start entering your information.</p>
+        <button className="btn btn-primary" onClick={() => setStep(1)}>Begin</button>
+    </div>
+)}
+
+                {step === 1 && (
+                    <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} className="space-y-4">
+                        <div className="form-control">
+                            <label htmlFor="username" className="label">
+                                <span className="label-text">Username:</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="username"
+                                id="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                required
+                                className="input input-bordered"
+                            />
+                        </div>
+                        <div className="form-control">
+                            <label htmlFor="password" className="label">
+                                <span className="label-text">Password:</span>
+                            </label>
+                            <input
+                                type="password"
+                                name="password"
+                                id="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="input input-bordered"
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary w-full">Next</button>
+                    </form>
+                )}
 
             {step === 2 && (
                 <form onSubmit={(e) => { e.preventDefault(); setStep(3); }} className="space-y-4">
