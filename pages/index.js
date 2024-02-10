@@ -2,7 +2,7 @@ import Head from 'next/head';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import Login from '../components/Login';
 import NewStaffForm from '../components/NewStaffForm';
-import Countdown from '../components/Countdown';
+
 import { useEffect, useState } from 'react';
 
 export default function HomePage() {
@@ -64,11 +64,7 @@ return (
           </div>
         </div>
 
-        {/* Countdown component now sits outside the hero div for clearer separation and better spacing */}
-        <div className="w-full max-w-xl mx-auto mb-12">
-          <Countdown startDate={startDate} showTitle={showTitle} />
-        </div>
-
+       
         {/* Render the Login and NewStaffForm components when their state is true */}
         {isLoginOpen && <Login isOpen={isLoginOpen} onClose={toggleLoginModal} />}
         {isNewStaffFormOpen && <NewStaffForm isOpen={isNewStaffFormOpen} onClose={toggleNewStaffFormModal} />}

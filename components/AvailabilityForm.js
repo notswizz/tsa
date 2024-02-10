@@ -10,6 +10,8 @@ const AvailabilityForm = ({ isOpen, onClose }) => {
   const [selectedShow, setSelectedShow] = useState(null);
   const [selectedShowId, setSelectedShowId] = useState(""); // New state for tracking selected show's ObjectId
   const [dateRange, setDateRange] = useState([]);
+  const [step, setStep] = useState(1);
+const [notes, setNotes] = useState('');
 
   useEffect(() => {
     const fetchShows = async () => {
@@ -63,6 +65,8 @@ const AvailabilityForm = ({ isOpen, onClose }) => {
       setSelectedShow(selected);
       // Use the composite key as the unique identifier
       setSelectedShowId(value); // This is `${selected.location}-${selected.month}`
+    } else if (name === "notes") {
+      setNotes(value);
     }
   };
   
@@ -72,22 +76,21 @@ const AvailabilityForm = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     const username = Cookies.get('username');
     if (!username) {
       setError('Username is not found in cookies. Please login again.');
       setIsLoading(false);
       return;
     }
-  
+
     const dataToSubmit = {
       username,
       selectedShowId, // This is now a composite key like "ATL-February"
       availability,
+      notes,
     };
 
-
-  
     try {
       const response = await fetch('/api/addAvailability', {
         method: 'POST',
@@ -105,64 +108,82 @@ const AvailabilityForm = ({ isOpen, onClose }) => {
     }
   };
   
-  
 
   return (
     <div className={`modal ${isOpen ? 'modal-open' : ''}`}>
       <div className="modal-box relative">
         <button onClick={onClose} className="btn btn-square btn-error absolute right-0 top-0 m-2">X</button>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="form-control">
-            <label htmlFor="show" className="label">
-              <span className="label-text">Select a Show:</span>
-            </label>
-            <select
-  name="show"
-  id="show"
-  onChange={handleChange}
-  className="select select-bordered w-full max-w-xs"
-  required>
-  <option disabled selected>Choose a show</option>
-  {shows.map((show, index) => (
-    // Create a pseudo-unique identifier by combining location and month
-    <option key={index} value={`${show.location}-${show.month}`}>
-      {`${show.location} - ${show.month}`}
-    </option>
-  ))}
-</select>
-
-
-          </div>
-          {dateRange.length > 0 && (
-  <div className="form-control">
-    <label className="label">
-      <span className="label-text">Select Your Available Dates:</span>
-    </label>
-    {dateRange.map((dateStr, index) => {
-      // Use the utility function to format the date
-      const formattedDate = toReadableDate(new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-      return (
-        <label key={index} className="label cursor-pointer flex justify-start gap-2">
-          <input
-            type="checkbox"
-            name={`availability-${dateStr}`}
-            onChange={handleChange}
-            className="checkbox checkbox-primary"
-            checked={availability.includes(dateStr)}
-          />
-          <span>{formattedDate}</span>
-        </label>
-      );
-    })}
+          {step === 1 && (
+            <>
+              <div className="form-control">
+                <label htmlFor="show" className="label">
+                  <span className="label-text">Select a Show:</span>
+                </label>
+                <select
+                  name="show"
+                  id="show"
+                  onChange={handleChange}
+                  className="select select-bordered w-full max-w-xs"
+                  required
+                >
+                  <option disabled selected>Choose a show</option>
+                  {shows.map((show, index) => (
+                    <option key={index} value={`${show.location}-${show.month}`}>
+                      {`${show.location} - ${show.month}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {dateRange.length > 0 && (
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Select Your Available Dates:</span>
+                  </label>
+                  {dateRange.map((dateStr, index) => {
+                    const formattedDate = toReadableDate(new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                    return (
+                      <label key={index} className="label cursor-pointer flex justify-start gap-2">
+                        <input
+                          type="checkbox"
+                          name={`availability-${dateStr}`}
+                          onChange={handleChange}
+                          className="checkbox checkbox-primary"
+                          checked={availability.includes(dateStr)}
+                        />
+                        <span>{formattedDate}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+          {step === 2 && (
+            <div className="form-control">
+              <label htmlFor="notes" className="label">
+                <span className="label-text">Notes:</span>
+              </label>
+              <textarea
+                name="notes"
+                id="notes"
+                onChange={handleChange}
+                className="textarea textarea-bordered w-full max-w-xs"
+                value={notes}
+              />
+            </div>
+          )}
+       <div className="modal-action">
+    {step === 1 ? (
+      <button type="button" onClick={() => setStep(2)} className="btn w-full btn-primary" disabled={isLoading}>
+        Next
+      </button>
+    ) : (
+      <button type="button" onClick={handleSubmit} className="btn w-full btn-primary" disabled={isLoading}>
+        {isLoading ? 'Submitting...' : 'Submit Availability'}
+      </button>
+    )}
   </div>
-)}
-
-
-          <div className="modal-action">
-            <button type="submit" className="btn w-full btn-primary" disabled={isLoading}>
-              {isLoading ? 'Submitting...' : 'Submit Availability'}
-            </button>
-          </div>
           {error && <p className="text-red-500">{error}</p>}
         </form>
       </div>

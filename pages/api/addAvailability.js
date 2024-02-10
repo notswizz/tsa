@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const { db } = await connectToDatabase();
-      const { username, selectedShowId, availability } = req.body;
+      const { username, selectedShowId, availability, notes } = req.body;
 
       // Parse the composite key to extract location and month
       // Assuming selectedShowId format is "location-month"
@@ -23,6 +23,7 @@ export default async function handler(req, res) {
           username,
           showDetails: { location, month }, // Storing these details for easier querying and readability
           availability,
+          notes,
         },
       };
 
