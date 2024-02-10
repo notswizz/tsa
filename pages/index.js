@@ -2,7 +2,8 @@ import Head from 'next/head';
 import ThemeSwitcher from '../components/ThemeSwitcher';
 import Login from '../components/Login';
 import NewStaffForm from '../components/NewStaffForm';
-import { useState } from 'react';
+import Countdown from '../components/Countdown';
+import { useEffect, useState } from 'react';
 
 export default function HomePage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -10,18 +11,42 @@ export default function HomePage() {
 
   const toggleLoginModal = () => setIsLoginOpen(!isLoginOpen);
   const toggleNewStaffFormModal = () => setIsNewStaffFormOpen(!isNewStaffFormOpen);
+  const [showTitle, setShowTitle] = useState('');
 
-  return (
+
+  // Example static start date definition
+  const [startDate, setStartDate] = useState('');
+
+// Inside HomePage useEffect hook
+useEffect(() => {
+  const fetchShows = async () => {
+    const response = await fetch('/api/getShows');
+    const shows = await response.json();
+    if (shows.length > 0) {
+      const nextShow = shows[0]; // Assuming the next show is the first one in the array
+      setStartDate(nextShow.startDate);
+      setShowTitle(nextShow.title); // Ensure you have useState for showTitle
+    }
+  };
+
+  fetchShows();
+}, []);
+
+
+return (
+  <>
+    {/* ThemeSwitcher positioned fixed at the very top left of the page */}
+    <div className="fixed top-0 left-0 z-50">
+      <ThemeSwitcher />
+    </div>
+
     <div className="bg-base-200">
       <Head>
         <title>The Smith Agency</title>
       </Head>
-      {/* ThemeSwitcher positioned relative to the viewport */}
-      <div className="fixed top-0 right-0 p-4 z-50">
-        <ThemeSwitcher />
-      </div>
+      
       <main className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4 text-center">
-        <div className="hero bg-base-100 rounded-lg shadow-xl overflow-hidden transform transition-all hover:scale-105 duration-500 w-full relative z-10">
+        <div className="hero bg-base-100 rounded-lg shadow-xl overflow-hidden transform transition-all hover:scale-105 duration-500 w-full relative z-10 mb-8">
           {/* Login button styled as an overlay on the top right of the hero section */}
           <div className="absolute top-4 right-4 z-20">
             <button onClick={toggleLoginModal} className="btn btn-primary">Login</button>
@@ -39,10 +64,17 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Countdown component now sits outside the hero div for clearer separation and better spacing */}
+        <div className="w-full max-w-xl mx-auto mb-12">
+          <Countdown startDate={startDate} showTitle={showTitle} />
+        </div>
+
         {/* Render the Login and NewStaffForm components when their state is true */}
         {isLoginOpen && <Login isOpen={isLoginOpen} onClose={toggleLoginModal} />}
         {isNewStaffFormOpen && <NewStaffForm isOpen={isNewStaffFormOpen} onClose={toggleNewStaffFormModal} />}
       </main>
     </div>
-  );
+  </>
+);
+
 }

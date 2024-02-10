@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { adjustDateToLocalStartOfDay } from '../utils/date';
 
 export default function AddShowForm({ isOpen, setIsOpen }) {
   const [show, setShow] = useState({
@@ -24,37 +25,47 @@ export default function AddShowForm({ isOpen, setIsOpen }) {
 // Inside AddShowForm component
 
 const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('/api/addShow', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(show),
-      });
-  
-      const data = await response.json();
-      
-      if (response.ok) {
-        console.log(data.message); // Display success message
-        // Optionally reset form or navigate user
-        setShow({
-          location: '',
-          month: '',
-          type: '',
-          startDate: '',
-          endDate: ''
-        });
-      } else {
-        console.error('Form submission error:', data.error);
-      }
-    } catch (error) {
-      console.error('Failed to submit the form:', error);
-    }
+  e.preventDefault();
+
+  // Adjust startDate and endDate using the utility function before submission
+  const adjustedShow = {
+    ...show, // Assuming 'show' is your state holding the form data
+    setupStartDate: adjustDateToLocalStartOfDay(show.setupStartDate),
+    setupEndDate: adjustDateToLocalStartOfDay(show.setupEndDate),
+    showStartDate: adjustDateToLocalStartOfDay(show.showStartDate),
+    showEndDate: adjustDateToLocalStartOfDay(show.showEndDate),
   };
-  
-  
+
+  try {
+    const response = await fetch('/api/addShow', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(adjustedShow),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(data.message); // Display success message
+      // Optionally reset form or navigate user
+      setShow({
+        location: '',
+        month: '',
+        type: '',
+        startDate: '',
+        endDate: ''
+      });
+    } else {
+      console.error('Form submission error:', data.error);
+    }
+  } catch (error) {
+    console.error('Failed to submit the form:', error);
+  }
+};
+
+
 
   const closeModal = () => setIsOpen(false);
 

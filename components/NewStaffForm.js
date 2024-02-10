@@ -18,7 +18,13 @@ export default function NewStaffForm({ isOpen, onClose }) {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+        let finalValue = type === 'checkbox' ? checked : value;
+
+        if (name === 'instagram' && value[0] !== '@') {
+           
+        }
+
+        setFormData({ ...formData, [name]: finalValue });
     };
 
     const handleSubmit = async (e) => {
@@ -72,7 +78,7 @@ export default function NewStaffForm({ isOpen, onClose }) {
 
 {step === 0 && (
     <div className="space-y-4 p-4 bg-white shadow-md rounded-lg text-center">
-        <h2 className="text-2xl font-bold text-gray-800">Welcome to the New Staff Form</h2>
+        <h2 className="text-2xl font-bold text-gray-800">TSA New Staff Application</h2>
         <p className="text-gray-600">Please click "Begin" to start entering your information.</p>
         <button className="btn btn-primary" onClick={() => setStep(1)}>Begin</button>
     </div>
@@ -172,9 +178,10 @@ export default function NewStaffForm({ isOpen, onClose }) {
                             type="text"
                             name="instagram"
                             id="instagram"
-                            value={formData.instagram}
+                            value={formData.instagram.charAt(0) === '@' ? formData.instagram : '@' + formData.instagram}
                             onChange={handleChange}
                             className="input input-bordered"
+                            placeholder="@"
                         />
                     </div>
 

@@ -17,7 +17,7 @@ const Login = ({ isOpen, onClose }) => {
 
         if (response.ok) {
             // Forward user to portal page upon successful login
-            Router.push('/portal');
+            Router.push('/user');
         } else {
             // Handle login failure (e.g., show error message)
             alert('Failed to log in');

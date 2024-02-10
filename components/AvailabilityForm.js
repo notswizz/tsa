@@ -1,69 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import Cookies from 'js-cookie'; // Import js-cookie
+import Cookies from 'js-cookie';
+import { toReadableDate } from '../utils/date'; 
 
 const AvailabilityForm = ({ isOpen, onClose }) => {
-  const [username, setUsername] = useState('');
-  const [userInfo, setUserInfo] = useState({
-    phone: '',
-    name: '',
-    email: '',
-    instagram: '',
-    size: '',
-    shoeSize: '',
-    college: '',
-    salesExp: '',
-    availability: [], // Now correctly initialized as an array
-    workPreferences: {
-      setup: false,
-      fullShow: false,
-      partialShow: false,
-    },
-    unavailableDays: '',
-  });
+  const [availability, setAvailability] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState(1);
   const [shows, setShows] = useState([]);
   const [selectedShow, setSelectedShow] = useState(null);
+  const [selectedShowId, setSelectedShowId] = useState(""); // New state for tracking selected show's ObjectId
   const [dateRange, setDateRange] = useState([]);
 
   useEffect(() => {
-    // Fetch user information based on the username from the cookie
-    const fetchUserInfo = async () => {
-      const username = Cookies.get('username'); // Get username from cookie
-      if (!username) {
-        console.error('No username found in cookie.');
-        return;
-      }
-      
-      setUsername(username); // Set username state
-
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/getUserInfo?username=${username}`);
-        if (!response.ok) throw new Error('Failed to fetch user info');
-        const data = await response.json();
-        setUserInfo({ ...userInfo, ...data });
-      } catch (error) {
-        console.error('Error fetching user info:', error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserInfo();
-  }, []);
-  
-
-  useEffect(() => {
     const fetchShows = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch('/api/getShows');
         const data = await response.json();
-        if (!response.ok) throw new Error('Failed to fetch shows');
         setShows(data);
       } catch (error) {
         console.error('Error fetching shows:', error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchShows();
@@ -71,208 +30,141 @@ const AvailabilityForm = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     if (selectedShow) {
-      const startDate = new Date(selectedShow.startDate);
-      const endDate = new Date(selectedShow.endDate);
+      console.log('Selected Show:', selectedShow); // Confirm selected show details are correct
+
+      const startDate = new Date(selectedShow.setupStartDate);
+      const endDate = new Date(selectedShow.showEndDate);
       const dates = [];
       for (let dt = new Date(startDate); dt <= endDate; dt.setDate(dt.getDate() + 1)) {
         dates.push(new Date(dt).toISOString().split('T')[0]);
       }
       setDateRange(dates);
+    } else {
+      setDateRange([]);
     }
   }, [selectedShow]);
 
-  const handleUsernameSubmit = async (e) => {
+  const handleChange = (e) => {
+    const { name, value, checked } = e.target;
+    if (name.startsWith('availability-')) {
+      const date = name.split('availability-')[1];
+      if (checked) {
+        setAvailability(prev => [...prev, date]);
+      } else {
+        setAvailability(prev => prev.filter(d => d !== date));
+      }
+    } else if (name === "show") {
+      // Reset availability when a new show is selected
+      setAvailability([]);
+      
+      // Find the selected show based on the composite key (location-month)
+      const selected = shows.find(show => `${show.location}-${show.month}` === value);
+      console.log('Selected Show:', selected);
+      setSelectedShow(selected);
+      // Use the composite key as the unique identifier
+      setSelectedShowId(value); // This is `${selected.location}-${selected.month}`
+    }
+  };
+  
+  
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+  
+    const username = Cookies.get('username');
+    if (!username) {
+      setError('Username is not found in cookies. Please login again.');
+      setIsLoading(false);
+      return;
+    }
+  
+    const dataToSubmit = {
+      username,
+      selectedShowId, // This is now a composite key like "ATL-February"
+      availability,
+    };
+
+
+  
     try {
-      const response = await fetch(`/api/getUsername?username=${username}`);
-      if (!response.ok) throw new Error('Failed to fetch user info');
-      const data = await response.json();
-      setUserInfo({ ...userInfo, ...data });
-      setStep(2);
+      const response = await fetch('/api/addAvailability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSubmit),
+      });
+      if (!response.ok) throw new Error('Failed to submit availability');
+      console.log('Availability submitted successfully');
+      onClose();
     } catch (error) {
-      console.error('Error fetching user info:', error);
+      console.error('Failed to submit availability:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (name === "show") {
-      const selected = shows.find(show => show._id === value);
-      setSelectedShow(selected);
-    } else if (name in userInfo.workPreferences) {
-      // This part now needs reevaluation for the array structure
-    } else {
-      setUserInfo(prevState => ({ ...prevState, [name]: type === 'checkbox' ? checked : value }));
-    }
-  };
-
-  // This function needs to be adapted to handle changes in array structure for availability
-  const handleAvailabilityChange = (showId, workPreference, value) => {
-    // Logic to update availability array goes here
-  };
-
-  const handleWorkPreferenceChange = (e) => {
-    const { name, checked } = e.target;
-    if (!selectedShow) return;
-    // Adjusted logic to handle work preference change
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch('/api/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userInfo),
-      });
-      if (!response.ok) throw new Error('Failed to submit form');
-      const result = await response.json();
-      console.log('Form submitted successfully:', result);
-      onClose();
-    } catch (error) {
-      console.error('Failed to submit form:', error);
-      setError(error.message);
-    }
-  };
+  
+  
 
   return (
     <div className={`modal ${isOpen ? 'modal-open' : ''}`}>
       <div className="modal-box relative">
         <button onClick={onClose} className="btn btn-square btn-error absolute right-0 top-0 m-2">X</button>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-  {step === 1 ? (
-    isLoading ? (
-      <p className="text-center">Loading...</p>
-    ) : (
-      <>
-        <div className="form-control">
-          <label htmlFor="username" className="label">
-            <span className="label-text">Username:</span>
-          </label>
-          <input
-            type="text"
-            name="username"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="input input-bordered input-primary w-full max-w-xs"
-            required
-          />
-        </div>
-        <div className="modal-action">
-          <button type="button" onClick={handleUsernameSubmit} className="btn w-full btn-primary">Login</button>
-        </div>
-      </>
-    )
-  ) : (
-    <>
-      <div className="form-control">
-        <label htmlFor="name" className="label text-lg font-bold">
-      
-        </label>
-        <span className="badge badge-outline text-lg p-2">{userInfo.name}</span>
-      </div>
-     
-      <div className="form-control">
-        <label htmlFor="show" className="label">
-          <span className="label-text">Select a Show:</span>
-        </label>
-        <select
-          name="show"
-          id="show"
-          onChange={(e) => {
-            handleChange(e);
-            // Assuming additional logic to update state based on the selected show
-          }}
-          className="select select-bordered w-full max-w-xs"
-          required
-        >
-          <option disabled selected>Choose a show</option>
-          {shows.map((show) => (
-            <option key={show._id} value={show._id}>
-              {`${show.location} - ${show.month}`}
-            </option>
-          ))}
-        </select>
-      </div>
-      {/* Dynamically generated checkboxes for availability */}
-      {dateRange.length > 0 && (
-        <>
-          <p className="text-sm font-semibold">Select Available Dates:</p>
-          {dateRange.map((date, index) => (
-            <div key={index} className="form-control">
-              <label className="label cursor-pointer">
-                <span className="label-text mr-2">{date}</span>
-                <input
-                  type="checkbox"
-                  name={`availability-${date}`}
-                  onChange={handleChange}
-                  className="toggle toggle-primary"
-                />
-              </label>
-            </div>
-          ))}
-        </>
-      )}
-      {/* Work Preferences Toggles */}
-      <div className="form-control">
-        <label className="label cursor-pointer">
-          <span className="label-text">Work Setup</span>
-          <input
-            type="checkbox"
-            name="setup"
-            checked={userInfo.workPreferences.setup}
-            onChange={handleChange}
-            className="toggle toggle-primary"
-          />
-        </label>
-      </div>
-      <div className="form-control">
-        <label className="label cursor-pointer">
-          <span className="label-text">Work Full Show</span>
-          <input
-            type="checkbox"
-            name="fullShow"
-            checked={userInfo.workPreferences.fullShow}
-            onChange={handleChange}
-            className="toggle toggle-primary"
-          />
-        </label>
-      </div>
-      <div className="form-control">
-        <label className="label cursor-pointer">
-          <span className="label-text">Work Partial Show</span>
-          <input
-            type="checkbox"
-            name="partialShow"
-            checked={userInfo.workPreferences.partialShow}
-            onChange={handleChange}
-            className="toggle toggle-primary"
-          />
-        </label>
-        {userInfo.workPreferences.partialShow && (
-          <input
-            type="text"
-            name="unavailableDays"
-            value={userInfo.unavailableDays}
-            onChange={handleChange}
-            placeholder="Days you can't work"
-            className="input input-bordered mt-2"
-          />
-        )}
-      </div>
-      <div className="modal-action">
-        <button type="submit" className="btn w-full btn-primary">Submit Availability</button>
-      </div>
-    </>
-  )}
-</form>
+          <div className="form-control">
+            <label htmlFor="show" className="label">
+              <span className="label-text">Select a Show:</span>
+            </label>
+            <select
+  name="show"
+  id="show"
+  onChange={handleChange}
+  className="select select-bordered w-full max-w-xs"
+  required>
+  <option disabled selected>Choose a show</option>
+  {shows.map((show, index) => (
+    // Create a pseudo-unique identifier by combining location and month
+    <option key={index} value={`${show.location}-${show.month}`}>
+      {`${show.location} - ${show.month}`}
+    </option>
+  ))}
+</select>
 
+
+          </div>
+          {dateRange.length > 0 && (
+  <div className="form-control">
+    <label className="label">
+      <span className="label-text">Select Your Available Dates:</span>
+    </label>
+    {dateRange.map((dateStr, index) => {
+      // Use the utility function to format the date
+      const formattedDate = toReadableDate(new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+      return (
+        <label key={index} className="label cursor-pointer flex justify-start gap-2">
+          <input
+            type="checkbox"
+            name={`availability-${dateStr}`}
+            onChange={handleChange}
+            className="checkbox checkbox-primary"
+            checked={availability.includes(dateStr)}
+          />
+          <span>{formattedDate}</span>
+        </label>
+      );
+    })}
+  </div>
+)}
+
+
+          <div className="modal-action">
+            <button type="submit" className="btn w-full btn-primary" disabled={isLoading}>
+              {isLoading ? 'Submitting...' : 'Submit Availability'}
+            </button>
+          </div>
+          {error && <p className="text-red-500">{error}</p>}
+        </form>
       </div>
     </div>
   );

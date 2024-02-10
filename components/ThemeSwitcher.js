@@ -29,7 +29,7 @@ export default function ThemeSwitcher() {
         Theme
       </button>
       {isOpen && (
-        <div className="dropdown-content mt-8 p-2 shadow-lg bg-base-100 rounded-box w-80 absolute right-0 glass" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem', overflow: 'auto', maxHeight: '300px', zIndex: '50' }}>
+        <div className="dropdown-content mt-8 p-2 shadow-lg bg-base-100 rounded-box w-80 absolute left-0 glass" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.5rem', overflow: 'auto', maxHeight: '300px', zIndex: '50' }}>
           {themes.map((theme, index) => (
             <button
               key={index}

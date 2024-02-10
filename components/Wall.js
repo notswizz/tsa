@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function Wall() {
+export default function Wall({ onClose }) {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [author, setAuthor] = useState('');
@@ -33,26 +33,40 @@ export default function Wall() {
     }
   };
 
-  // Function to simulate closing (e.g., hiding the component or clearing fields)
   const handleClose = () => {
-    // Your logic here. For demonstration, I'll just clear the message and author
     setMessage('');
     setAuthor('');
+    if (typeof onClose === 'function') {
+      onClose(); // Call the onClose function only if it's a function
+    }
   };
+  
 
   return (
     <div className="relative bg-white shadow-lg rounded-lg p-4">
       <button onClick={handleClose} className="absolute top-0 right-0 p-2 m-2 text-lg bg-transparent hover:bg-gray-200 rounded-full">
         &times; {/* This is a simple "×" character used as a close icon */}
       </button>
+    
+  
+      <div className="mt-8 space-y-4">
+        {messages.map(({ _id, message, author }) => (
+          <div key={_id} className="flex items-start space-x-3">
+            <div className="avatar">
+              <div className="w-10 rounded-full">
+                {/* Placeholder for user avatar; you might want to replace it with the author's avatar if available */}
+                <img src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" alt="User avatar" />
+              </div>
+            </div>
+            <div className="chat-bubble">
+              <div className="font-bold">{author}</div>
+              <p>{message}</p>
+            </div>
+          </div>
+        ))}
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-        <input
-          type="text"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          placeholder="Your name"
-          className="input input-bordered"
-        />
+       
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -63,15 +77,8 @@ export default function Wall() {
           Post Message
         </button>
       </form>
-
-      <div className="mt-8">
-        {messages.map(({ _id, message, author }) => (
-          <div key={_id} className="p-4 border-b">
-            <p className="font-bold">{author}</p>
-            <p>{message}</p>
-          </div>
-        ))}
-      </div>
     </div>
   );
+  
+  
 }
